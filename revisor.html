@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title> Revisor </title>
+    <style>
+      p {
+        padding: 20px;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <p></p>
+    <input
+      type="file"
+      webkitdirectory=""
+      directory=""
+      multiple
+    />
+
+    <script>
+      let files,
+        file_index = 0;
+      const text = document.querySelector("p");
+      const upload_btn = document.querySelector("input");
+
+      function processText(input) {
+        return input.replaceAll("\n", "<br>").replaceAll(" ", "&nbsp;");
+      }
+
+      function renderFile(index) {
+        if (index >= files.length) {
+          text.innerHTML = "<strong> Congratulations !!!🥳 </strong>";
+          upload_btn.style.display = "block";
+          return;
+        }
+        text.innerHTML = processText(files[index]);
+      }
+
+      upload_btn.onchange = ({ srcElement }) => {
+        upload_btn.style.display = "none";
+        files = srcElement.files;
+        const cache = [];
+        for (let i = 0; i < files.length; i++) {
+          const reader = new FileReader();
+          reader.addEventListener("load", (event) => {
+            cache.push(event.target.result);
+            if (cache.length == files.length) {
+              localStorage.setItem("files", JSON.stringify(cache));
+              files = cache;
+              file_index = 0;
+              renderFile(file_index);
+            }
+          });
+          reader.readAsText(files[i]);
+        }
+      }
+
+      document.addEventListener("keydown", (e) => {
+        switch (e.key) {
+          case "Enter":
+            file_index += file_index < files.length ? 1 : 0;
+            renderFile(file_index);
+            break;
+          case "ArrowLeft":
+            file_index += file_index <= 0 ? 0 : -1;
+            renderFile(file_index);
+            break;
+          case "ArrowRight":
+            file_index += file_index < files.length ? 1 : 0;
+            renderFile(file_index);
+            break;
+        }
+      })
+
+      function init() {
+        files = localStorage.getItem("files");
+        if (!files) return;
+        files = JSON.parse(files);
+        upload_btn.style.display = "none";
+        renderFile(file_index);
+      }
+      init();
+    </script>
+  </body>
+</html>
